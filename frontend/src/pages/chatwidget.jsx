@@ -1,20 +1,55 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send } from "lucide-react";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const [chat, setChat] = useState([
+    { sender: "ai", text: "Namaste! I'm your AI guide. Ask me anything about your learning journey." },
+  ]);
+  const [loading, setLoading] = useState(false);
+
+  // Initialize Geminis
+  const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+  const sendMessage = async () => {
+    if (!message.trim()) return;
+
+    const userMessage = { sender: "user", text: message };
+    setChat((prev) => [...prev, userMessage]);
+    setMessage("");
+    setLoading(true);
+
+    try {
+      const result = await model.generateContent(message);
+      const response = await result.response.text();
+
+      setChat((prev) => [
+        ...prev,
+        { sender: "ai", text: response || "Hmm... I couldn't generate a response." },
+      ]);
+    } catch (error) {
+      console.error(error);
+      setChat((prev) => [
+        ...prev,
+        { sender: "ai", text: "Sorry, there was an issue connecting to the AI." },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
       {/* Chat Button */}
       <motion.button
-        className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-br from-[#FFD95A] to-[#56CCF2] rounded-full shadow-lg flex items-center justify-center z-40"
+        className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-br from-[#FFD95A] to-[#56CCF2] rounded-full shadow-lg flex items-center justify-center z-40 overflow-hidden"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="Toggle chat"
       >
         <AnimatePresence mode="wait">
           {isOpen ? (
@@ -38,17 +73,11 @@ const ChatWidget = () => {
           )}
         </AnimatePresence>
 
-        {/* Pulse Effect */}
+        {/* Pulse Animation */}
         <motion.div
           className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FFD95A] to-[#56CCF2]"
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.5, 0, 0.5],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-          }}
+          animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity }}
         />
       </motion.button>
 
@@ -71,7 +100,7 @@ const ChatWidget = () => {
                     transition={{ duration: 2, repeat: Infinity }}
                   />
                 </div>
-                <div className="flex-1">
+                <div>
                   <div className="text-[#001F54] font-semibold">AI Tutor</div>
                   <div className="text-xs text-[#001F54]/70">
                     Always here to help
@@ -80,20 +109,37 @@ const ChatWidget = () => {
               </div>
             </div>
 
-            {/* Messages */}
+            {/* Chat Area */}
             <div className="flex-1 p-4 overflow-y-auto space-y-4">
-              <motion.div
-                className="flex justify-start"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-              >
-                <div className="max-w-[80%] bg-white/80 dark:bg-white/10 rounded-2xl rounded-tl-sm p-4 border border-[#FFD95A]/20">
-                  <p className="text-sm text-[#001F54] dark:text-white">
-                    Namaste! I'm your AI guide. Ask me anything about your
-                    learning journey.
-                  </p>
-                </div>
-              </motion.div>
+              {chat.map((msg, i) => (
+                <motion.div
+                  key={i}
+                  className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+                  initial={{ opacity: 0, x: msg.sender === "user" ? 20 : -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                >
+                  <div
+                    className={`max-w-[80%] p-3 rounded-2xl border ${
+                      msg.sender === "user"
+                        ? "bg-gradient-to-r from-[#FFD95A] to-[#56CCF2] text-[#001F54] border-transparent"
+                        : "bg-white/80 dark:bg-white/10 text-[#001F54] dark:text-white border-[#FFD95A]/20"
+                    }`}
+                  >
+                    <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                  </div>
+                </motion.div>
+              ))}
+              {loading && (
+                <motion.div
+                  className="flex justify-start"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <div className="bg-white/60 dark:bg-white/10 text-[#001F54] dark:text-white rounded-2xl p-3 border border-[#FFD95A]/20">
+                    <p className="text-sm animate-pulse">Thinking...</p>
+                  </div>
+                </motion.div>
+              )}
             </div>
 
             {/* Input */}
@@ -104,21 +150,13 @@ const ChatWidget = () => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Type your question..."
-                  className="flex-1 px-4 py-3 rounded-xl bg-white/50 dark:bg-white/5 border border-[#FFD95A]/30 focus:border-[#FFD95A] focus:outline-none text-sm text-[#001F54] dark:text-white placeholder-[#001F54]/40 dark:placeholder-white/40"
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter" && message.trim()) {
-                      setMessage("");
-                    }
-                  }}
+                  className="flex-1 px-4 py-3 rounded-xl bg-white/50 dark:bg-white/5 border border-[#FFD95A]/30 focus:border-[#FFD95A] focus:outline-none text-sm text-[#001F54] dark:text-white"
+                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                 />
                 <button
                   className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#FFD95A] to-[#56CCF2] flex items-center justify-center hover:shadow-lg transition-all"
-                  onClick={() => {
-                    if (message.trim()) {
-                      setMessage("");
-                    }
-                  }}
-                  aria-label="Send message"
+                  onClick={sendMessage}
+                  disabled={loading}
                 >
                   <Send className="w-5 h-5 text-[#001F54]" />
                 </button>
