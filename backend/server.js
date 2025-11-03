@@ -3,6 +3,11 @@ const express = require("express");
 
 const connectDB = require("./config/db");
 
+const aitutorroute = require("./routes/aitutorroute");    
+const chatrouter = require("./routes/chatrouter");   
+const learningpathrouter = require("./routes/learningpathrouter")  
+const profilepage = require("./routes/profilepage"); 
+const summarypage = require("./routes/summarypage");
 
 const app = express();
 
@@ -16,6 +21,12 @@ app.use(
 
 connectDB();
 app.use(express.json());
+
+app.use("/api/aitutor", aitutorroute);
+app.use("/api/chat", chatrouter);
+app.use("/api/learningpath", learningpathrouter);
+app.use("/api/profile", profilepage); 
+app.use("/api/summarypage", summarypage);
 
 
 app.get("/", (req, res) => {
