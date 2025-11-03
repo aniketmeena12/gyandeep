@@ -2,9 +2,9 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Brain, Sparkles, TrendingUp, MessageCircle } from 'lucide-react';
-import { LightParticles } from './LightParticles';
-import { WaveTransition } from './WaveTransition';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import LightParticles from '../components/lightparticles';
+import WaveTransition from '../components/waveparticle';
 
 export function HomePage() {
   const features = [
