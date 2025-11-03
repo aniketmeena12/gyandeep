@@ -1,13 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
+import { HomePage } from './pages/homepage';
+import AITutorPage from './pages/AITutor';
+import { LearningPathPage } from './pages/learningpathpage';
+import { ProfilePage } from './pages/profilepage';
+import SummaryPage from './pages/summarypage';
+import ChatWidget from './pages/chatwidget';
 
-import HomePage from './components/HomePage';
-import AITutorPage from './components/AITutorPage';
-import LearningPathPage from './components/LearningPathPage';
-import SummaryPage from './components/SummaryPage';
-import ProfilePage from './components/ProfilePage';
-import ChatWidget from './components/ChatWidget';
 
 function Navigation() {
   const location = useLocation();
@@ -89,7 +89,7 @@ export default function App() {
             <Route path="/profile" element={<ProfilePage />} />
           </Routes>
         </main>
-        <ChatWidget />
+        <ChatWidget/>
       </div>
     </Router>
   );

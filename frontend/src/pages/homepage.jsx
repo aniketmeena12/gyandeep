@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Brain, Sparkles, TrendingUp, MessageCircle } from 'lucide-react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+import { ImageWithFallback } from '../Imagefallback/Imagewithfallback';
 import LightParticles from '../components/lightparticles';
 import WaveTransition from '../components/waveparticle';
 
